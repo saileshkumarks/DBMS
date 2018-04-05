@@ -1,0 +1,30 @@
+(1) For filmActor.xml, provides the XPath expressions for the following queries.
+(a) The titles of films with an id of 5 or less.
+//filmActor/films/film[@id<=5]/title/text()
+
+(b) The names of actors who appeared in more than 35 films.
+//actor[films/@count>35]/name/text()
+
+(c) All film title elements the actor with id 10 appears in.
+//films/film[@id=//actor[@id=10]/films/film/@id]/title
+
+(d) All title elements of films that contain both 'Delete Scenes' and 'Trailers' as special features.
+//films/film[contains(specialFeatures/text(), 'Deleted Scenes') and contains(specialFeatures/text(), 'Trailers')]/title
+
+(2) XQuery:
+
+element films
+{   for $fid in fn:distinct-values
+      (//films/film[contains(specialFeatures/text(), 'Deleted Scenes') and contains(specialFeatures/text(), 'Trailers')]/@id)
+   let $ftitle := (//films/film[@id=$fid]/title/text()),
+       $flength := (//films/film[@id=$fid]/length),
+       $fspecialfeatures := (//films/film[@id=$fid]/specialFeatures/text())
+   order by $ftitle ascending
+   return
+   element film
+   {    attribute id { $fid },
+   		attribute length { $flength },
+   		element title { $ftitle },
+   		element features { $fspecialfeatures }
+   }
+ }

@@ -1,0 +1,96 @@
+-- (1) List the titles of all films with a PG rating
+-- COUNT = 194
+SELECT A.TITLE
+FROM FILM A
+WHERE A.RATING = 'PG'
+ORDER BY A.TITLE; 
+
+
+-- (2) List the titles of all files in the category with id #3
+-- COUNT = 60
+SELECT A.TITLE
+FROM FILM A, FILM_CATEGORY B
+WHERE A.FILM_ID = B.FILM_ID
+AND B.CATEGORY_ID = 3
+ORDER BY A.TITLE;
+
+
+-- (3) List the titles of all files in the category Comedy
+-- COUNT = 58
+SELECT A.TITLE
+FROM FILM A, FILM_CATEGORY B, CATEGORY C
+WHERE A.FILM_ID = B.FILM_ID
+AND B.CATEGORY_ID = C.CATEGORY_ID
+AND C.NAME = 'COMEDY'
+ORDER BY A.TITLE;
+
+-- (4) List the names of customers with last names 'WILLIAMS' or 'JONES'
+-- COUNT = 2
+SELECT A.FIRST_NAME, A.LAST_NAME
+FROM CUSTOMER A
+WHERE A.LAST_NAME IN ('WILLIAMS', 'JONES')
+ORDER BY A.FIRST_NAME;
+
+-- (5) List the id of customers who have rented both films id #19 and #43
+-- COUNT = 1
+SELECT DISTINCT C1.CUSTOMER_ID
+FROM INVENTORY B1, RENTAL C1
+WHERE B1.INVENTORY_ID = C1.INVENTORY_ID 
+AND C1.CUSTOMER_ID IN
+  (SELECT A.CUSTOMER_ID
+    FROM RENTAL A, INVENTORY B
+    WHERE A.INVENTORY_ID = B.INVENTORY_ID
+    AND B.FILM_ID = 43) 
+AND B1.FILM_ID = 19;
+
+-- (6) List the titles of films that have not been rented. (They may not even be in the inventory.)
+-- COUNT = 42
+SELECT DISTINCT C.TITLE FROM FILM C
+WHERE C.FILM_ID NOT IN
+  (SELECT DISTINCT A.FILM_ID
+    FROM INVENTORY A, RENTAL B
+    WHERE A.INVENTORY_ID = B.INVENTORY_ID)
+ORDER BY 1;
+
+-- (7) List the ids of films with two or more actors. You must use the 'group by' clause
+-- COUNT = 976
+SELECT A.FILM_ID, COUNT(*)
+FROM FILM A, ACTOR B, FILM_ACTOR C
+WHERE A.FILM_ID = C.FILM_ID
+AND B.ACTOR_ID = C.ACTOR_ID
+GROUP BY A.FILM_ID
+HAVING COUNT(C.ACTOR_ID) >= 2
+ORDER BY A.FILM_ID;
+
+-- (8) List the name of all actors who have appeared in four or more films in the category Comedy in the following format. Note the listing order.
+-- COUNT = 13
+SELECT 
+  A.ACTOR_ID, 
+  CONCAT (A.FIRST_NAME, ' ', A.LAST_NAME) AS NAME, 
+  COUNT(B.FILM_ID) AS 'NUMBER OF FILMS', 
+  REPLACE(GROUP_CONCAT(B.TITLE ORDER BY B.TITLE), ',', ', ') AS 'COMEDY FILMS'
+FROM ACTOR A, FILM B, CATEGORY C, FILM_CATEGORY D, FILM_ACTOR E
+WHERE A.ACTOR_ID = E.ACTOR_ID
+AND B.FILM_ID = D.FILM_ID
+AND B.FILM_ID = E.FILM_ID
+AND C.CATEGORY_ID = D.CATEGORY_ID
+AND C.NAME = 'Comedy'
+GROUP BY A.ACTOR_ID
+HAVING COUNT(B.FILM_ID) >= 4
+ORDER BY 3 DESC;
+
+-- (9) List the name of all actors who have appeared in films in not more than 9 categories in the following format
+-- COUNT = 4
+SELECT 
+  A.ACTOR_ID, 
+  CONCAT (A.FIRST_NAME, ' ', A.LAST_NAME) AS NAME, 
+  COUNT(DISTINCT C.CATEGORY_ID) AS 'NUMBER OF CATEGORIES', 
+  REPLACE(GROUP_CONCAT(DISTINCT C.NAME ORDER BY C.NAME), ',', ', ') AS 'CATEGORIES'
+FROM ACTOR A, FILM B, CATEGORY C, FILM_CATEGORY D, FILM_ACTOR E
+WHERE A.ACTOR_ID = E.ACTOR_ID
+AND B.FILM_ID = D.FILM_ID
+AND B.FILM_ID = E.FILM_ID
+AND C.CATEGORY_ID = D.CATEGORY_ID
+GROUP BY A.ACTOR_ID
+HAVING COUNT(DISTINCT C.CATEGORY_ID) <= 9
+ORDER BY 3 DESC;
